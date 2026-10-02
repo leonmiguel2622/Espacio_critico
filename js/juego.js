@@ -18,6 +18,7 @@ const CONFIG = {
     spawnEnemigoMin: 0.22,
     rampaDificultad: 0.006,
     spawnPowerCada: 11,
+    spawnPowerJefe: 6,   // en pelea de jefe caen más seguido (no hay asteroides que den drops)
     maxParticulas: 120,
     maxEnemigos: 12,
     maxBalas: 70,
@@ -25,6 +26,7 @@ const CONFIG = {
 // Rendimiento: modo eco auto si los FPS caen (quita sombras y halos caros)
 let modoEco = false, ecoRachaBaja = 0, fpsAvg = 60, hudTimer = 0, fpsTimer = 0;
 let fondoCache = null;
+let escala = 1; // resolución interna del canvas (nítido en tablets/pantallas HiDPI)
 // Meta de kills por nivel: 16, 20, 24... (alcanzable, no eterna)
 function metaDeNivel(n) { return 12 + n * 4; }
 const NOMBRES_JEFE = ['AVISPA', 'MANTIS', 'DREADNOUGHT', 'HYDRA', 'LEVIATÁN', 'OMEGA'];
@@ -49,7 +51,7 @@ const ctx = canvas.getContext('2d');
             get() { return _sb; },
             set(v) {
                 _sb = (typeof modoEco !== 'undefined' && modoEco) ? 0 : v;
-                desc.set.call(ctx, _sb);
+                desc.set.call(ctx, _sb * escala);
             },
             configurable: true
         });
@@ -293,6 +295,7 @@ let stats = { disparos: 0, aciertos: 0, kills: 0, racha: 0, rachaMax: 0, jefes: 
 
 const teclas = { izquierda: false, derecha: false, arriba: false, abajo: false, disparar: false };
 let touchActivo = false, touchX = null, touchY = null;
+let touchOff = 55; // separación dedo-nave en unidades de juego (se calcula en px reales de pantalla)
 // El ratón SOLO dispara (no mueve la nave, por decisión de diseño para PC).
 let ratonActivo = false;
 // Auto-fuego opcional para PC (tecla F, persiste). En móvil siempre hay auto-fuego al tocar.
@@ -371,7 +374,7 @@ class Jugador {
         if (teclas.abajo) this.y += v * dt;
         // Táctil XY: la nave persigue al dedo (con offset para no taparla)
         if (touchActivo && touchX !== null && touchY !== null) {
-            const ox = touchX - this.ancho / 2, oy = touchY - this.alto / 2 - 55;
+            const ox = touchX - this.ancho / 2, oy = touchY - this.alto / 2 - touchOff;
             const dx = clamp(ox - this.x, -v * dt * 2, v * dt * 2);
             const dy = clamp(oy - this.y, -v * dt * 2, v * dt * 2);
             this.x += dx; this.y += dy;
@@ -765,6 +768,26 @@ class Estrella {
     }
 }
 
+// Power inteligente: prioriza lo que NO tienes activo (para jefes)
+function tipoPowerInteligente() {
+    const op = [
+        ['escudo', jugador.escudo ? 0 : 3],
+        ['triple', jugador.triple ? 0.6 : 2.5],
+        ['rapid', jugador.rapid ? 0.6 : 2],
+        ['vida', vidas >= 5 ? 0 : (vidas <= 2 ? 4 : vidas <= 3 ? 2.5 : 1)],
+    ];
+    let r = Math.random() * op.reduce((a, o) => a + o[1], 0);
+    for (const [tipo, w] of op) { if ((r -= w) < 0) return tipo; }
+    return 'rapid';
+}
+function soltarPowerJefe(x, y) {
+    if (powerups.length >= 4) return;
+    const p = new PowerUp(tipoPowerInteligente());
+    p.x = clamp(x, 34, CONFIG.W - 34); p.y = y;
+    powerups.push(p);
+    textoFlotante(p.x, p.y + 22, '¡BOTÍN!', '#ffe14d');
+}
+
 class PowerUp {
     constructor(tipoForzado) {
         this.x = rand(34, CONFIG.W - 34); this.y = -20;
@@ -1050,6 +1073,7 @@ class Jefe {
         this.nombre = nombreJefe(nivelJ);
         this.maxHp = this.def.hp + Math.floor((nivelJ - 1) / BOSSES.length) * 80;
         this.hp = this.maxHp;
+        this.umbrales = [0.75, 0.5, 0.25]; // al bajar de cada % de vida suelta un power
         this.x = CONFIG.W / 2; this.y = -90;
         this.objetivoY = 118;
         this.t = 0; this.radio = 52; this.entrada = true;
@@ -1125,6 +1149,10 @@ class Jefe {
     herir() {
         this.hp--;
         crearExplosion(this.x + rand(-40, 40), this.y + rand(-30, 30), '#ffffff', 6);
+        while (this.hp > 0 && this.umbrales.length && this.hp / this.maxHp <= this.umbrales[0]) {
+            this.umbrales.shift();
+            soltarPowerJefe(this.x, this.y + 50);
+        }
         return this.hp <= 0;
     }
     dibujar() {
@@ -1449,6 +1477,7 @@ function aparecerJefeNivel() {
     fase = 'jefe';
     jefe = new Jefe(nivel);
     AudioEngine.bossWarn();
+    timerPower = Math.min(timerPower, 3.5); // primer power pronto al empezar el jefe
     if (ui.hudJefe) ui.hudJefe.classList.remove('oculta');
     if (ui.jefeNombreTxt) ui.jefeNombreTxt.textContent = jefe.nombre;
     if (ui.avisoJefeTxt) ui.avisoJefeTxt.textContent = jefe.nombre + ' EN APROXIMACIÓN';
@@ -1775,13 +1804,18 @@ function frame(now) {
         if (balasEnemigas.length > CONFIG.maxBalas) balasEnemigas.splice(0, balasEnemigas.length - CONFIG.maxBalas);
         timerPower -= dt;
         if (timerPower <= 0) {
-            timerPower = CONFIG.spawnPowerCada;
-            // Piedad: con 3 o menos vidas, el temporizado sale vida (con cooldown para no abusar)
-            if (vidas <= 3 && tiempoJuego - ultimaVidaPiedad > PIEDAD_VIDA_CADA) {
-                ultimaVidaPiedad = tiempoJuego;
-                powerups.push(new PowerUp('vida'));
+            if (fase === 'jefe') {
+                timerPower = CONFIG.spawnPowerJefe;
+                if (powerups.length < 3) powerups.push(new PowerUp(tipoPowerInteligente()));
             } else {
-                powerups.push(new PowerUp());
+                timerPower = CONFIG.spawnPowerCada;
+                // Piedad: con 3 o menos vidas, el temporizado sale vida (con cooldown para no abusar)
+                if (vidas <= 3 && tiempoJuego - ultimaVidaPiedad > PIEDAD_VIDA_CADA) {
+                    ultimaVidaPiedad = tiempoJuego;
+                    powerups.push(new PowerUp('vida'));
+                } else {
+                    powerups.push(new PowerUp());
+                }
             }
         }
         if (avisoTimer > 0) {
@@ -1931,6 +1965,7 @@ canvas.addEventListener('touchstart', (e) => {
     AudioEngine.init();
     if (estado !== 'playing') return;
     touchActivo = true;
+    touchOff = clamp(72 * CONFIG.H / (canvas.getBoundingClientRect().height || CONFIG.H), 40, 170);
     const p = canvasPos(e.touches[0].clientX, e.touches[0].clientY);
     touchX = p.x; touchY = p.y;
 }, { passive: false });
@@ -1982,6 +2017,22 @@ function inicializarEstrellas() {
 }
 ui.record.textContent = record;
 ui.btnMute.textContent = AudioEngine.muted ? '🔇' : '🔊';
+// Ajusta la resolución interna al tamaño real en pantalla (tablets / HiDPI)
+function ajustarLienzo() {
+    const w = canvas.getBoundingClientRect().width;
+    if (!w) return;
+    const s = Math.round(Math.min(2, Math.max(1, w * (window.devicePixelRatio || 1) / CONFIG.W)) * 4) / 4;
+    if (s === escala && canvas.width === Math.round(CONFIG.W * s)) return;
+    escala = s;
+    canvas.width = Math.round(CONFIG.W * s);
+    canvas.height = Math.round(CONFIG.H * s);
+    ctx.setTransform(s, 0, 0, s, 0, 0);
+}
+if ('ResizeObserver' in window) new ResizeObserver(ajustarLienzo).observe(canvas);
+window.addEventListener('resize', ajustarLienzo);
+window.addEventListener('orientationchange', () => setTimeout(ajustarLienzo, 250));
+ajustarLienzo();
+
 inicializarEstrellas();
 pintarTop();
 mostrarSolo(ui.pantallaInicio);

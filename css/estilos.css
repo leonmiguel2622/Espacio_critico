@@ -916,3 +916,79 @@ kbd{
         transition-duration:.001s !important
     }
 }
+
+/* ===== v6 — Responsive PC / tablet / celular ===== */
+:root{
+    --chrome:150px;
+    --ancho-juego:min(95vw, calc((100dvh - var(--chrome)) * 1.3333), 1100px);
+}
+html{ -webkit-text-size-adjust:100% }
+body{
+    min-height:100dvh;
+    overscroll-behavior:none;
+    -webkit-tap-highlight-color:transparent;
+    padding-left:max(12px, env(safe-area-inset-left));
+    padding-right:max(12px, env(safe-area-inset-right));
+}
+.brand, #contenedor-juego{ width:var(--ancho-juego) }
+#contenedor-juego{ container-type:inline-size; -webkit-touch-callout:none }
+
+/* HUD escala con el tamaño real del juego */
+.pill{ font-size:clamp(9px,1.6cqw,12px); padding:clamp(4px,1cqw,8px) clamp(7px,1.6cqw,13px) }
+#interfaz{ top:clamp(6px,1.2cqw,10px) }
+.hud-power{ font-size:clamp(8.5px,1.4cqw,11px); padding:clamp(4px,1cqw,8px) clamp(6px,1.4cqw,11px) }
+#efectos-hud{ top:clamp(36px,7.2cqw,58px) }
+#hud-jefe{ top:clamp(34px,6.8cqw,54px) }
+#hud-jefe, #aviso-jefe, #banner-nivel{ pointer-events:none } /* no bloquear el dedo/clic */
+
+/* Menús: si el contenido no cabe, se puede hacer scroll sin cortar lo de arriba */
+.pantalla-overlay{ justify-content:center; justify-content:safe center }
+
+/* ----- Vertical (celulares y tablets en portrait): HUD fuera del área de juego ----- */
+@media (orientation:portrait){
+    :root{ --ancho-juego:min(calc(100vw - 16px), 900px) }
+    #contenedor-juego{ aspect-ratio:auto; padding-top:76px }
+    #contenedor-juego:has(.pantalla-overlay:not(.oculta)){ min-height:min(580px, calc(100dvh - 110px)) }
+    #lienzoJuego{ height:auto; aspect-ratio:4/3 }
+    #interfaz{ top:6px; left:8px; right:8px; flex-wrap:nowrap; gap:4px }
+    .pill{ font-size:11px; padding:6px 9px }
+    .pill-nivel .barra-nivel{ width:34px }
+    .pill-vidas{ max-width:none }
+    #efectos-hud{ top:42px; left:8px; right:8px; max-width:none; flex-direction:row; flex-wrap:wrap }
+    .hud-power{ font-size:10px; padding:4px 8px }
+    #hud-jefe{ top:82px; width:min(84%,380px) }
+    .brand-badge{ display:none }
+    .grid-inicio{ grid-template-columns:1fr 1fr; max-height:none; overflow:visible; max-width:420px }
+    .grid-inicio .card:last-child{ grid-column:1 / -1 }
+    .card{ font-size:12px; line-height:1.6 }
+    .titulo-hero{ font-size:clamp(30px,10vw,52px) !important }
+    #controles-top{ opacity:1 }
+}
+@media (orientation:portrait) and (min-width:700px){
+    .grid-inicio{ grid-template-columns:repeat(3,1fr); max-width:660px }
+    .grid-inicio .card:last-child{ grid-column:auto }
+    .pill{ font-size:13px } .hud-power{ font-size:12px }
+}
+
+/* ----- Celular horizontal: el juego ocupa toda la pantalla ----- */
+@media (orientation:landscape) and (max-height:540px){
+    :root{ --chrome:10px }
+    body{ padding:4px max(8px,env(safe-area-inset-right)) 4px max(8px,env(safe-area-inset-left)); align-items:center }
+    .brand, .creditos{ display:none }
+    #contenedor-juego{ border-radius:12px }
+    #controles-top{ opacity:1 }
+    .pantalla-overlay{ gap:5px; padding:8px }
+    .pantalla-overlay h1{ font-size:clamp(20px,4.6cqw,30px) }
+    .titulo-hero{ font-size:clamp(26px,7cqw,44px) !important }
+    .subtitulo, .eyebrow{ display:none }
+    .grid-inicio{ grid-template-columns:repeat(3,1fr); max-width:none; max-height:none; overflow:visible; gap:6px }
+    .card{ font-size:11px; line-height:1.45; padding:7px 8px }
+    .card-titulo{ font-size:10.5px; margin-bottom:2px }
+    .btn-hero{ padding:10px 26px; font-size:14px }
+    .btn-secundario{ padding:10px 16px }
+    #estadisticas{ grid-template-columns:repeat(6,1fr); gap:6px }
+    .stat{ padding:6px 3px } .stat-num{ font-size:15px } .stat-ico{ font-size:14px } .stat-lab{ font-size:9px; letter-spacing:.5px }
+    .final-puntos{ font-size:clamp(28px,6cqw,40px) }
+    #efectos-hud{ top:34px }
+    #hud-jefe{ top:32px; width:min(46%,300px) }
+}

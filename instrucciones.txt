@@ -51,7 +51,7 @@ Opción B:
 
 4. PODERES Y AVISOS ROJOS
 ------------------------------------------------------------------------
-Caen cada ~11 segundos (+ 6% al destruir, 12% si tienes 3 o
+Caen cada ~11 segundos (cada ~6s durante un jefe, más un botín al bajarle 25%, 50% y 75% de vida) (+ 6% al destruir, 12% si tienes 3 o
 menos vidas). Reparto: Triple 25%, Rapid 15%, Escudo 25%,
 Vida 35%:
 
