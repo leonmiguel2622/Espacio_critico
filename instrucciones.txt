@@ -1,0 +1,85 @@
+========================================================================
+              GUÍA RÁPIDA: ESPACIO CRÍTICO v4 DIRECTOR'S CUT - Miguel León
+========================================================================
+
+1. CÓMO ARRANCAR EL JUEGO
+------------------------------------------------------------------------
+Opción A (recomendada):
+* Abre la carpeta en VS Code, clic derecho en 'index.html' ->
+  "Open with Live Server".
+
+Opción B:
+* Doble clic en index.html (funciona, pero el audio va mejor con Live Server
+  por las políticas de autoplay del navegador).
+
+* Elige dificultad (Fácil 5 vidas / Normal 3 / Difícil 2 con más puntos)
+  y pulsa "▶ JUGAR AHORA" o presiona Enter.
+
+2. CONTROLES REALES
+------------------------------------------------------------------------
+* MOVIMIENTO (la única forma de mover):
+  - [W A S D] / Flechas : mover la nave
+  - TÁCTIL: arrastra el dedo (la nave sigue al dedo con offset para no taparla)
+  - EL RATÓN NO MUEVE LA NAVE (decisión de diseño, en PC se sentía feo).
+    Solo dispara.
+
+* DISPARO:
+  - [Espacio] mantenido o [Clic izquierdo] mantenido: ráfaga continua.
+  - [F]: auto-fuego PC on/off (se guarda). En móvil siempre es automático.
+  - TÁCTIL: al tocar la pantalla disparas automáticamente.
+
+* SISTEMA:
+  - [P] o [Esc]: Pausa / Reanudar (botón ⏸️ en pantalla, 44px táctil)
+  - [M]: Silenciar / Activar sonido (se guarda)
+  - [Enter]: Jugar / Reintentar / Reanudar
+  - El juego se pausa solo si cambias de pestaña.
+
+3. REGLAS v4 (100% vectorial, niveles + jefes)
+------------------------------------------------------------------------
+* Objetivo: completa la meta de kills (Nivel 1 = 16, Nivel 2 = 20, ...) y
+  derrota a la nave-jefe. Bonus + cura + 2 powers al ganar nivel.
+* Vidas: según dificultad (5/3/2), máximo 5. Pierdes 1 solo si TE CHOCAN,
+  te da una bala o te pilla un rayo. Si escapan por abajo no pierdes vida.
+* Tras daño eres invencible 2s (parpadeas). Tras absorber con escudo, 1s.
+* Puntos: base por tipo (tank 30 / kamikaze 15 / normal 10) + bonus racha
+  (hasta +30). Verás "+pts" flotando. Jefe da 300 + nivel*100.
+* Racha: solo se pierde si te golpean. Combo visible desde x3.
+* Enemigos: normal, weaver (zigzag), kamikaze (te persigue leve),
+  tank (3 HP, anillo gris). Dificultad sube con tiempo + nivel.
+* Jefes (6): AVISPA, MANTIS, DREADNOUGHT, HYDRA, LEVIATÁN, OMEGA.
+  No subas arriba del 32% de la pantalla: es el nido del jefe.
+
+4. PODERES Y AVISOS ROJOS
+------------------------------------------------------------------------
+Caen cada ~11 segundos (+ 6% al destruir, 12% si tienes 3 o
+menos vidas). Reparto: Triple 25%, Rapid 15%, Escudo 25%,
+Vida 35%:
+
+* [Verde - Triple]: 3 balas 8s. Barra verde.
+* [Amarillo - Rapid]: cadencia x2.1 durante 8s. Barra amarilla.
+* [Celeste - Escudo]: aguanta 1 golpe (+1s gracia). Texto ESCUDO.
+* [Rosa - Vida]: +1 vida (máx 5, si llena da puntos o sale Rapid).
+* PIEDAD: si tienes 3 o menos vidas, el de cada ~11s sale Vida
+  (máximo 1 cada 30s, para ayudar sin regalar la partida).
+
+AVISO ROJO 0.5s antes del poder fuerte. NO siempre es "sal de ahí":
+lee el texto del jefe: "quédate en el centro", "sigue el hueco",
+"sigue la línea roja", "aléjate", etc.
+
+5. ARCHIVOS DEL PROYECTO
+------------------------------------------------------------------------
+* index.html : estructura + HUD + 3 pantallas (inicio/pausa/fin)
+* css/estilos.css : responsive, HUD powers, botones 44px, reduced-motion
+* js/juego.js : motor deltaTime, 1 solo RAF, arte procedural, audio WebAudio
+* img/logo.png : SÍ SE USA (logo del header). No borrar.
+* README.md : descripción v4 completa.
+
+6. FIN DE PARTIDA Y TIPS
+------------------------------------------------------------------------
+* Al perder verás estadísticas + Top-5, con "JUGAR OTRA VEZ" y "Menú".
+* Abajo del juego tienes el contador FPS. Si tu PC va justo, el juego
+  activa solo el modo eco (menos brillos, mismos jefes y reglas).
+* Juega 60s para ver weaver/kamikaze/tank.
+* En jefe, guarda el escudo para el poder fuerte, no para balas sueltas.
+* Pulsa F si te cansa mantener Espacio. Pulsa M para probar mute persistente.
+* Precisión = proyectiles que impactan (normal ver 20-40% en shooter).

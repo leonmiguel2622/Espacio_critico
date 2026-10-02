@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Espacio Crítico - Shooter 2D en HTML5 Canvas. Esquiva asteroides, recoge power-ups y bate tu récord. Proyecto de Miguel León.">
+    <meta name="theme-color" content="#050510">
+    <title>Espacio Crítico - Shooter 2D | Miguel León</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <div class="fondo-decor" aria-hidden="true">
+        <span class="orbe orbe-1"></span>
+        <span class="orbe orbe-2"></span>
+        <span class="orbe orbe-3"></span>
+        <span class="rejilla"></span>
+    </div>
+
+    <main class="pagina">
+        <header class="brand">
+            <div class="logo"><img src="img/logo.png" alt="Logo de Espacio Crítico" width="48" height="48"></div>
+            <div class="brand-texto">
+                <p class="brand-titulo">ESPACIO <span>CRÍTICO</span></p>
+            </div>
+            <div class="brand-badge">v4 DIRECTOR'S CUT</div>
+        </header>
+
+        <div id="contenedor-juego">
+            <!-- HUD superior -->
+            <div id="interfaz">
+                <div id="puntuacion" class="pill pill-puntos">⭐ <span id="puntos-valor">0</span></div>
+                <div id="nivel-pill" class="pill pill-nivel">NV <span id="nivel-valor">1</span> · <span id="nivel-prog">0/16</span>
+                    <div class="barra-nivel"><div id="barra-nivel-fill"></div></div>
+                </div>
+                <div id="record-interfaz" class="pill pill-record">🏆 <span id="record-valor">0</span></div>
+                <div id="vidas" class="pill pill-vidas" aria-label="Vidas restantes">❤️❤️❤️</div>
+            </div>
+
+            <!-- Indicadores de estado -->
+            <div id="efectos-hud">
+                <div id="hud-triple" class="hud-power oculta" title="Disparo triple activo">
+                    <span class="dot dot-verde"></span> TRIPLE <span id="triple-tiempo">8s</span>
+                    <div class="barra-power"><div id="barra-triple"></div></div>
+                </div>
+                <div id="hud-escudo" class="hud-power oculta" title="Escudo activo">
+                    <span class="dot dot-celeste"></span> ESCUDO
+                </div>
+                <div id="hud-combo" class="hud-power hud-combo oculta" title="Racha actual">
+                    🔥 x<span id="combo-valor">0</span>
+                </div>
+                <div id="hud-rapid" class="hud-power oculta" title="Cadencia rápida activa">
+                    <span class="dot dot-amarillo"></span> RAPID <span id="rapid-tiempo">8s</span>
+                    <div class="barra-power"><div id="barra-rapid"></div></div>
+                </div>
+            </div>
+
+            <!-- Barra de jefe + aviso -->
+            <div id="hud-jefe" class="oculta">
+                <p id="jefe-nombre">☠️ <span id="jefe-nombre-txt">DREADNOUGHT</span> <span id="jefe-hp-txt"></span></p>
+                <div id="barra-jefe"><div id="barra-jefe-fill"></div></div>
+                <p id="jefe-poder-txt"></p>
+            </div>
+            <div id="aviso-jefe" class="oculta" role="alert" aria-live="assertive">⚠️ <span id="aviso-jefe-txt">JEFE EN APROXIMACIÓN</span> ⚠️</div>
+            <div id="banner-nivel" class="oculta"></div>
+
+            <!-- Botones de control -->
+            <div id="controles-top">
+                <button type="button" id="btn-pausa" aria-label="Pausar o reanudar (P)" title="Pausa (P)">⏸️</button>
+                <button type="button" id="btn-mute" aria-label="Silenciar o activar sonido (M)" title="Sonido (M)">🔊</button>
+            </div>
+
+            <canvas id="lienzoJuego" width="800" height="600" aria-label="Zona de juego Espacio Crítico"></canvas>
+            <div id="flash" aria-hidden="true"></div>
+            <div id="vineta-dano" aria-hidden="true"></div>
+
+            <!-- Pantalla inicio -->
+            <div id="pantalla-inicio" class="pantalla-overlay">
+                <p class="eyebrow">DIRECTOR'S CUT</p>
+                <h1 class="titulo-hero">ESPACIO<br><span>CRÍTICO</span></h1>
+                <p class="subtitulo">Completa la meta y derrota al jefe. El aviso rojo indica cómo esquivar.</p>
+                <div class="dificultad" role="group" aria-label="Elige dificultad">
+                    <button type="button" class="dif-btn" data-dif="facil">😌 FÁCIL</button>
+                    <button type="button" class="dif-btn activa" data-dif="normal">🔥 NORMAL</button>
+                    <button type="button" class="dif-btn" data-dif="dificil">💀 DIFÍCIL</button>
+                </div>
+                <div class="grid-inicio">
+                    <div class="card">
+                        <p class="card-titulo">🎮 Controles</p>
+                        <p><kbd>WASD</kbd> / flechas mover</p>
+                        <p><kbd>Espacio</kbd> / <kbd>Clic</kbd> disparar</p>
+                        <p>📱 arrastra para mover</p>
+                    </div>
+                    <div class="card">
+                        <p class="card-titulo">⚡ Power-ups</p>
+                        <p><span class="dot dot-verde"></span> Triple · 8s</p>
+                        <p><span class="dot dot-amarillo"></span> Rapid · fuego x2</p>
+                        <p><span class="dot dot-celeste"></span> Escudo · 1 golpe</p>
+                        <p><span class="dot dot-rosa"></span> Vida · máx 5</p>
+                    </div>
+                    <div class="card">
+                        <p class="card-titulo">🏆 Top pilotos</p>
+                        <ol id="top5-lista"><li>Aún sin récords. ¡Sé el primero!</li></ol>
+                    </div>
+                </div>
+                <button type="button" id="btn-iniciar" class="btn-hero">▶ JUGAR AHORA</button>
+            </div>
+
+            <!-- Pantalla pausa -->
+            <div id="pantalla-pausa" class="pantalla-overlay oculta">
+                <p class="eyebrow">PAUSA</p>
+                <h1>⏸️ En espera</h1>
+                <div class="fila-botones">
+                    <button type="button" id="btn-reanudar" class="btn-hero">▶ Reanudar</button>
+                    <button type="button" id="btn-salir-menu" class="btn-secundario">Menú</button>
+                </div>
+            </div>
+
+            <!-- Pantalla fin -->
+            <div id="pantalla-fin" class="pantalla-overlay oculta">
+                <p class="eyebrow">MISIÓN TERMINADA</p>
+                <h1>💥 Fin del juego</h1>
+                <p class="final-puntos"><span id="puntos-finales">0</span> <small>PTS</small> <small id="final-dif"></small></p>
+                <p id="mensaje-record" role="status"></p>
+                <div id="estadisticas">
+                    <div class="stat"><span class="stat-ico">🚀</span><span class="stat-num" id="stat-nivel">1</span><span class="stat-lab">Nivel</span></div>
+                    <div class="stat"><span class="stat-ico">⏱️</span><span class="stat-num" id="stat-tiempo">0s</span><span class="stat-lab">Tiempo</span></div>
+                    <div class="stat"><span class="stat-ico">☄️</span><span class="stat-num" id="stat-kills">0</span><span class="stat-lab">Destruidos</span></div>
+                    <div class="stat"><span class="stat-ico">🎯</span><span class="stat-num" id="stat-precision">0%</span><span class="stat-lab">Precisión</span></div>
+                    <div class="stat"><span class="stat-ico">🔥</span><span class="stat-num" id="stat-racha">0</span><span class="stat-lab">Racha</span></div>
+                    <div class="stat"><span class="stat-ico">👾</span><span class="stat-num" id="stat-jefes">0</span><span class="stat-lab">Jefes</span></div>
+                </div>
+                <div class="card card-top-fin">
+                    <p class="card-titulo">🏆 Mejores puntuaciones</p>
+                    <ol id="top5-fin"></ol>
+                </div>
+                <div class="fila-botones">
+                    <button type="button" id="btn-reiniciar" class="btn-hero">↻ JUGAR OTRA VEZ</button>
+                    <button type="button" id="btn-fin-menu" class="btn-secundario">Menú</button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="creditos">Miguel León · Canvas + JS · <span id="fps">60</span> FPS</footer>
+    </main>
+
+    <script src="js/juego.js"></script>
+</body>
+</html>
